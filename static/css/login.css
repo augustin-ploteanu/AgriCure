@@ -1,0 +1,73 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f2f2f2; /* Light background color */
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Full height of the viewport */
+}
+
+.form {
+    background-color: white; /* White background for the form */
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    width: 300px; /* Set a width for the form */
+}
+
+h4 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333; /* Dark text color */
+}
+
+.form-row {
+    margin-bottom: 15px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 5px;
+    color: #555; /* Slightly lighter color for labels */
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc; /* Light border */
+    border-radius: 4px; /* Rounded corners */
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
+    transition: border-color 0.3s; /* Smooth transition for focus */
+}
+
+.form-input:focus {
+    border-color: #60b56c; /* Change border color on focus */
+    outline: none; /* Remove default outline */
+}
+
+.form-alert {
+    display: none; /* Hide alert initially */
+    color: red; /* Red color for alerts */
+    font-size: 0.85em; /* Slightly smaller font size */
+}
+
+.btn {
+    background-color: #8fcf93; /* Button color */
+    color: white; /* Button text color */
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%; /* Full width for the button */
+    transition: background-color 0.3s; /* Smooth transition for hover */
+}
+
+.btn:hover {
+    background-color: #72e4a5; /* Darker shade on hover */
+}
+

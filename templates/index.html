@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriCure</title>
+  <link rel="stylesheet" href="../static/css/pico.jade.css">
+  <link rel="stylesheet" href="../static/css/styles.css">
+  <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicon-32x32.png">
+</head>
+<body>
+  <header class="container-fluid">
+    <div class="app-logo">
+      <h1>AgriCure</h1>
+    </div>
+      <a href='autentificare.html'>login</a>    
+    </div>
+    <div class="controls">
+      <div class="lang-select">
+        <fieldset>
+          <input type="radio" id="english" name="second-language" checked />
+          <label htmlFor="english">En</label>
+          <input type="radio" id="romanian" name="second-language" />
+          <label htmlFor="romanian">Ro</label>
+          <input type="radio" id="russian" name="second-language" />
+          <label htmlFor="russian">Ru</label>
+        </fieldset>
+      </div>
+      
+      <div class="dark-mode-toggle">
+        <label>
+          <input id="dark-mode-toggle" name="theme-toggle" type="checkbox" role="switch"/>
+          Dark Mode
+        </label>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-container">
+    <main class="container">
+      <div class="element-container">
+        <section class="abstract">
+          <h2 data-mlr-text>What is AgriCure?</h2>
+          <span data-mlr-text>AgriCure is a simple and powerful tool that helps you identify plant diseases by analyzing a photo of your plants. Just snap a picture of the affected plant, and the app will diagnose the issue, suggest treatments, and offer care tips to keep your garden healthy. Whether you're a home gardener or a professional, it provides quick and reliable solutions to protect your plants and improve their overall health.</span>
+        </section>
+      </div>      
+      <div class="element-container">
+        <section>
+          <h2 data-mlr-text>Frequently asked questions</h2>
+          <details>
+            <summary data-mlr-text>How accurate is the app in identifying plant diseases?</summary>
+            <p data-mlr-text>The app uses advanced machine learning algorithms and image processing techniques to analyze plant symptoms and provide highly accurate diagnoses. While it performs well with common diseases, it's continually updated to improve accuracy for a wide range of plant species and conditions.</p>
+          </details>
+          
+          <hr />
+          <details>
+            <summary data-mlr-text>Can I use the app offline?</summary>
+            <p data-mlr-text>The app requires an internet connection to analyze images and access the latest plant disease data. However, you can store previously diagnosed plants and treatments in your library for offline access.</p>
+          </details>
+          
+          <hr />
+          <details>
+            <summary data-mlr-text>Does the app provide organic treatment options?</summary>
+            <p data-mlr-text>Yes! The app offers a variety of treatment recommendations, including organic and environmentally friendly solutions, so you can choose the option that best suits your gardening preferences.</p>
+          </details>
+          
+          <hr />
+        </section>
+      </div>
+  
+      <section>
+        <div class="form-submit-button">
+          <h2 data-mlr-text>Upload an image!</h2>
+          <form id="image-form" action="{{ url_for('upload_image') }}" method="POST" enctype="multipart/form-data">
+            <!-- Proper CSRF token inclusion as a hidden input -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">  
+        
+            <!-- <label data-mlr-text for="plant-type">Select Plant Type:</label> -->
+            <p data-mlr-text>Select Plant Type:</p>
+            <select id="plant-type" name="plant-type">
+                <option data-mlr-text value="Grapes">Grapes</option>
+                <option data-mlr-text value="Apple">Apple</option>
+                <option data-mlr-text value="Cucumber">Cucumber</option>
+                <option data-mlr-text value="Tomato">Tomato</option>    
+            </select>
+            
+            <input type="file" id="image-upload" name="image-upload" accept="image/*">
+            <button data-mlr-text type="submit">Upload</button>
+        </form>        
+        </div>
+      </section>
+
+      <section class="hidden-until-submit">
+        <h2 data-mlr-text>Submitted Image</h2>
+        <img id="submitted-image" src="" alt="Your submitted image will appear here.">
+      </section>
+  
+      <section class="hidden-until-submit">
+        <h2 data-mlr-text>Result</h2>
+        <div id="result"></div>
+      </section>
+
+      <div class="navbar">
+        <nav>
+          <ul>
+            <li><a href="https://utm.md/en/" target="_blank">UTM</a></li>
+            <li><a href="https://github.com/" target="_blank">GitHub</a></li>
+          </ul>
+        </nav>
+      </div>
+      
+    </main>
+  </div>
+  
+  <script src="../static/js/script.js"></script>
+  <script src="../static/js/language_picker.js"></script>
+  <script src="../static/js/authentification.js"></script>
+</body>
+</html>

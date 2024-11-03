@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../static/css/styles.css"> 
+    <link rel="stylesheet" href="../static/css/login.css"> 
+    <title>Sign Up</title>
+</head>
+<body>
+    <div class="container">
+        <form class="form" action="/signup" method="POST"> <!-- Add the action and method attributes -->
+            {{ csrf_token() }} <!-- Include the CSRF token here -->
+            <h4>SIGN UP</h4>
+            <div class="form-row">
+                <label for="name" class="form-label">Username</label>
+                <input type="text" placeholder="Please, enter your username" id="name" name="username" class="form-input" required>
+            </div>
+
+            <div class="form-row">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" id="email" name="email" class="form-input" required>
+            </div>
+
+            <div class="form-row">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" id="password" name="password" class="form-input" required>
+                <small class="form-alert">Please provide a password</small>
+            </div>
+
+            <button type="submit" class="btn form-btn">Submit</button>
+        </form>
+    </div>
+</body>
+</html>

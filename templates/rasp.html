@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Menu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        nav {
+            margin: 20px;
+        }
+        nav a {
+            margin: 10px;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        nav a:hover {
+            background-color: #45a049;
+        }
+        #live-stream, #capture-photo {
+            display: none;
+        }
+        #timestamp {
+            margin-top: 10px;
+            font-style: italic;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Camera Menu</h1>
+    <nav>
+        <a href="#" id="show-live">Live Camera</a>
+        <a href="#" id="show-photo">Capture Photo</a>
+    </nav>
+
+    <div id="live-stream">
+        <h2>Live Stream</h2>
+        <img src="http://192.168.137.219:8080/?action=stream" alt="Live Stream" width="640" height="480">
+    </div>
+
+    <div id="capture-photo">
+        <h2>Capture Photo</h2>
+        <img id="captured-img" src="" alt="Captured Photo" width="640" height="480" style="display: none;">
+        <button id="capture-button">Capture Photo</button>
+        <div id="timestamp"></div>
+    </div>
+
+    <script>
+        const liveButton = document.getElementById('show-live');
+        const photoButton = document.getElementById('show-photo');
+        const liveStream = document.getElementById('live-stream');
+        const capturePhoto = document.getElementById('capture-photo');
+        const captureButton = document.getElementById('capture-button');
+        const timestampDiv = document.getElementById('timestamp');
+        const capturedImg = document.getElementById('captured-img');
+
+        liveButton.addEventListener('click', () => {
+            liveStream.style.display = 'block';
+            capturePhoto.style.display = 'none';
+        });
+
+        photoButton.addEventListener('click', () => {
+            liveStream.style.display = 'none';
+            capturePhoto.style.display = 'block';
+        });
+
+        captureButton.addEventListener('click', () => {
+
+            const now = new Date();
+            const formattedTime = now.toLocaleString(); 
+
+            fetch('/capture')
+                .then(response => {
+                    if (response.ok) {
+                        return response.json(); 
+                    } else {
+                        throw new Error('Error capturing photo');
+                    }
+                })
+                .then(data => {
+                    const timestampedImage = `uploads/${data.filename}`;  
+                    capturedImg.src = `${timestampedImage}?${new Date().getTime()}`;  
+                    capturedImg.style.display = 'block';  
+                    timestampDiv.innerHTML = `Captured on: ${formattedTime}`;
+                })
+                .catch(error => {
+                    console.error('Capture error: ', error);
+                    alert('There was an issue capturing the photo.');
+                });
+        });
+        
+    </script>
+    
+</body>
+</html>
