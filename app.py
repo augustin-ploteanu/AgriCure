@@ -1,5 +1,5 @@
 import importlib
-import logging  
+import logging
 from flask import Flask, flash, request, jsonify, render_template
 import os
 from werkzeug.utils import secure_filename
@@ -10,8 +10,8 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_wtf import CSRFProtect 
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-import plant_disease_database
-
+from werkzeug.security import generate_password_hash, check_password_hash  # Added this for password hashing
+import plant_disease_database  # Assuming this is a local module for database interaction
 
 app = Flask(__name__)
 
@@ -26,33 +26,34 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Logging configuration
-logging.basicConfig(level=logging.WARNING,  
+logging.basicConfig(level=logging.WARNING,
                     format='%(asctime)s %(levelname)s: %(message)s',
                     handlers=[logging.FileHandler("app.log"),
                               logging.StreamHandler()])
-log = logging.getLogger('werkzeug')  
+log = logging.getLogger('werkzeug')
 log.setLevel(logging.INFO)
 
-# Security
-csrf = CSRFProtect(app) 
+# Security setup
+csrf = CSRFProtect(app)
 limiter = Limiter(
-    get_remote_address,  # This will use the client's IP address
+    get_remote_address,
     app=app,
     default_limits=["16 per minute"]
 )
+jwt = JWTManager(app)  # Initialize JWT manager
 
 # Patch pathlib to avoid issues with Windows paths
 pathlib.PosixPath = pathlib.WindowsPath
 
+# Mock user database
 user_db = {}
 
 @app.route('/register', methods=['POST'])
 def register():
-    # Assuming you have a user database
     username = request.json.get('username')
     password = request.json.get('password')
 
-    # Check if username exists (you'll need to implement this)
+    # Check if username exists
     if username in user_db:
         return jsonify({"msg": "User already exists"}), 400
     
@@ -60,8 +61,6 @@ def register():
     hashed_password = generate_password_hash(password)
     user_db[username] = hashed_password
     return jsonify({"msg": "User registered successfully"}), 201
-
-
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -74,19 +73,12 @@ def login():
         return jsonify({"msg": "User does not exist"}), 404
 
     # Check password
-    if not check_password_hash(users_db[username], password):
+    if not check_password_hash(user_db[username], password):  # Fixed `users_db` to `user_db`
         return jsonify({"msg": "Bad password"}), 401
 
     # Create JWT token
     access_token = create_access_token(identity=username)
     return jsonify(access_token=access_token), 200
-
-
-@app.route('/upload', methods=['POST'])
-@jwt_required()
-def protected():
-    current_user = get_jwt_identity()
-    return jsonify(logged_in_as=current_user), 200
 
 # Load YOLO models
 model1 = torch.hub.load('ultralytics/yolov5', 'custom', path='models/grape.pt', force_reload=True)
@@ -101,62 +93,44 @@ def get_info_for_prediction(disease_id, model_nr):
 
 # Function to perform predictions
 def main_predict(file_path, plant_type):
-    logging.info(f'Performing prediction for plant type: {plant_type}, file: {file_path}')  # Log prediction start
-    # Load the image using PIL
+    logging.info(f'Performing prediction for plant type: {plant_type}, file: {file_path}')
     image = Image.open(file_path)
 
-    # Resize the image if necessary (optional step based on your use case)
-    #image = image.resize((1920, 1080))
-
-    # Parse the detection results
     best_prediction = None
     max_conf = 0
 
-    if plant_type == 'Grapes':
-        model = model1
-        model_nr = 1
-    elif plant_type == "Apple":
-        model = model2
-        model_nr = 2
-    elif plant_type == "Cucumber":
-        model = model3
-        model_nr = 3
-    elif plant_type == "Tomato":
-        model = model4
-        model_nr = 4
+    model_map = {
+        'Grapes': (model1, 1),
+        'Apple': (model2, 2),
+        'Cucumber': (model3, 3),
+        'Tomato': (model4, 4)
+    }
 
-    # Run the model prediction
+    model, model_nr = model_map.get(plant_type, (None, None))
+    if model is None:
+        logging.warning(f'Invalid plant type: {plant_type}')
+        return None
+
     results = model(image)
 
     if len(results.xyxy[0]) > 0:
         for obj in results.xyxy[0]:
-            obj = results.xyxy[0][0]
-            class_id = int(obj[5])  # Get the object class ID
-            confidence = float(obj[4])  # Confidence score
+            class_id = int(obj[5])
+            confidence = float(obj[4])
 
             if confidence > max_conf:
                 max_conf = confidence
                 disease_info = get_info_for_prediction(class_id, model_nr)
 
-                if disease_info['disease'] == 'Unknown':
-                    best_prediction = {
-                        'plant': plant_type,
-                        'disease': 'Unknown',
-                        'causes': 'Unknown',
-                        'treatment': 'Unknown',
-                        'confidence': round(confidence * 100, 2)
-                    }
+                best_prediction = {
+                    'plant': plant_type,
+                    'disease': disease_info.get('disease', 'Unknown'),
+                    'causes': disease_info.get('causes', 'Unknown'),
+                    'treatment': disease_info.get('treatment', 'Unknown'),
+                    'confidence': round(confidence * 100, 2)
+                }
 
-                else:
-                    best_prediction = {
-                        'plant': plant_type,
-                        'disease': disease_info['disease'],
-                        'causes': disease_info['causes'],
-                        'treatment': disease_info['treatment'],
-                        'confidence': round(confidence * 100, 2)
-                    }
-
-    logging.info(f'Prediction result: {best_prediction}')  
+    logging.info(f'Prediction result: {best_prediction}')
     return best_prediction
 
 # Custom error handler for 404
@@ -176,29 +150,22 @@ def index():
     return render_template('index.html')
 
 @app.route('/upload', methods=['POST'])
-def upload():    
-    return {"response":"text"}
-# def upload():
-#     return render_template("register.html");
+@jwt_required()
 @limiter.limit("16 per minute")
-
-
 def upload_image():
     if 'image-upload' not in request.files or 'plant-type' not in request.form:
-        logging.warning('No file or plant type provided.')  
+        logging.warning('No file or plant type provided.')
         return jsonify({'error': 'No file or plant type provided'}), 400
 
     file = request.files['image-upload']
-    plant_type = request.form['plant-type']  
+    plant_type = request.form['plant-type']
 
     if file.filename == '':
-        logging.warning('No selected file.')  
+        logging.warning('No selected file.')
         return jsonify({'error': 'No selected file'}), 400
 
     filename = secure_filename(file.filename)
-
-    # This creates the uploads folder
-    uploads_dir = os.path.join(BASE_DIR, 'uploads')
+    uploads_dir = os.path.join(BASE_DIR, UPLOAD_FOLDER)
 
     if not os.path.exists(uploads_dir):
         os.makedirs(uploads_dir)
@@ -207,32 +174,29 @@ def upload_image():
     file.save(file_path)
 
     try:
-        #perform the prediction:
         best_prediction = main_predict(file_path, plant_type)
-        
-        #Inserting the detection result into the database:
+
         plant_disease_database.add_detection_result(
-            user_id= 'default_user',
+            user_id='default_user',
             plant_type=plant_type,
             disease=best_prediction['disease'],
             confidence=best_prediction['confidence'],
             file_path=file_path
         )
 
-    #user_id is a placeholder and should be replaced with actual user authentification logic
     except Exception as e:
-        logging.error(f'Error during prediction: {e}', exc_info=True)  
+        logging.error(f'Error during prediction: {e}', exc_info=True)
         return jsonify({'error': str(e)}), 400
 
     result = {
         'Plant': plant_type,
         'Disease': best_prediction['disease'] if best_prediction else 'No disease identified',
-        'Causes': best_prediction['causes'] if best_prediction else 'N/A',
-        'Treatment': best_prediction['treatment'] if best_prediction else 'N/A',
-        'Confidence': best_prediction['confidence'] if best_prediction else 'N/A'
+        'Causes': best_prediction.get('causes', 'N/A'),
+        'Treatment': best_prediction.get('treatment', 'N/A'),
+        'Confidence': best_prediction.get('confidence', 'N/A')
     }
 
-    logging.info(f'Upload result: {result}')  
+    logging.info(f'Upload result: {result}')
     return jsonify(result)
 
 if __name__ == "__main__":

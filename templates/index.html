@@ -13,23 +13,22 @@
     <div class="app-logo">
       <h1>AgriCure</h1>
     </div>
-      <a href='autentificare.html'>login</a>    
-    </div>
+    <a href='autentificare.html'>login</a>
     <div class="controls">
       <div class="lang-select">
         <fieldset>
           <input type="radio" id="english" name="second-language" checked />
-          <label htmlFor="english">En</label>
+          <label for="english">En</label>
           <input type="radio" id="romanian" name="second-language" />
-          <label htmlFor="romanian">Ro</label>
+          <label for="romanian">Ro</label>
           <input type="radio" id="russian" name="second-language" />
-          <label htmlFor="russian">Ru</label>
+          <label for="russian">Ru</label>
         </fieldset>
       </div>
       
       <div class="dark-mode-toggle">
         <label>
-          <input id="dark-mode-toggle" name="theme-toggle" type="checkbox" role="switch"/>
+          <input id="dark-mode-toggle" name="theme-toggle" type="checkbox" role="switch" aria-label="Toggle dark mode"/>
           Dark Mode
         </label>
       </div>
@@ -43,7 +42,8 @@
           <h2 data-mlr-text>What is AgriCure?</h2>
           <span data-mlr-text>AgriCure is a simple and powerful tool that helps you identify plant diseases by analyzing a photo of your plants. Just snap a picture of the affected plant, and the app will diagnose the issue, suggest treatments, and offer care tips to keep your garden healthy. Whether you're a home gardener or a professional, it provides quick and reliable solutions to protect your plants and improve their overall health.</span>
         </section>
-      </div>      
+      </div>
+      
       <div class="element-container">
         <section>
           <h2 data-mlr-text>Frequently asked questions</h2>
@@ -72,33 +72,35 @@
         <div class="form-submit-button">
           <h2 data-mlr-text>Upload an image!</h2>
           <form id="image-form" action="{{ url_for('upload_image') }}" method="POST" enctype="multipart/form-data">
-            <!-- Proper CSRF token inclusion as a hidden input -->
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">  
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         
-            <!-- <label data-mlr-text for="plant-type">Select Plant Type:</label> -->
-            <p data-mlr-text>Select Plant Type:</p>
+            <label for="plant-type" data-mlr-text>Select Plant Type:</label>
             <select id="plant-type" name="plant-type">
+                <option value="" disabled selected>Select a plant type</option>
                 <option data-mlr-text value="Grapes">Grapes</option>
                 <option data-mlr-text value="Apple">Apple</option>
                 <option data-mlr-text value="Cucumber">Cucumber</option>
                 <option data-mlr-text value="Tomato">Tomato</option>    
             </select>
             
+            <label for="image-upload" data-mlr-text>Choose an image:</label>
             <input type="file" id="image-upload" name="image-upload" accept="image/*">
             <button data-mlr-text type="submit">Upload</button>
-        </form>        
+          </form>        
         </div>
       </section>
 
-      <section class="hidden-until-submit">
-        <h2 data-mlr-text>Submitted Image</h2>
-        <img id="submitted-image" src="" alt="Your submitted image will appear here.">
-      </section>
-  
-      <section class="hidden-until-submit">
-        <h2 data-mlr-text>Result</h2>
-        <div id="result"></div>
-      </section>
+      <div class="hidden-until-submit">
+        <section>
+          <h2 data-mlr-text>Submitted Image</h2>
+          <img id="submitted-image" src="" alt="Your submitted image will appear here.">
+        </section>
+      
+        <section>
+          <h2 data-mlr-text>Result</h2>
+          <div id="result"></div>
+        </section>
+      </div>
 
       <div class="navbar">
         <nav>
@@ -108,10 +110,9 @@
           </ul>
         </nav>
       </div>
-      
     </main>
   </div>
-  
+
   <script src="../static/js/script.js"></script>
   <script src="../static/js/language_picker.js"></script>
   <script src="../static/js/authentification.js"></script>
