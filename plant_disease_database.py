@@ -24,7 +24,7 @@ def close_connection(connection):
         print("Database connection closed")
 
 # Function to add a new user
-def add_user(username, email, password): #aici am adaugat si password
+def add_user(username, email, password):
     connection = connect_db()
     if connection is None:
         return None
@@ -39,31 +39,32 @@ def add_user(username, email, password): #aici am adaugat si password
     finally:
         cursor.close()
         close_connection(connection)
-        
-# Function to save image and return its path
-def save_image(image_data, file_name):
-    file_path = f"/uploads/{file_name}"  # Adjust path as needed
-    with open(file_path, 'wb') as file:
-        file.write(image_data)
-    return file_path
 
-# Function to add a user upload
-def add_user_upload(user_id, image_path, result_id):
+# Function to add a user upload (with confidence score calculated after image analysis)
+def add_user_upload(user_id, plant_id, disease_id, confidence_score):
     connection = connect_db()
     if connection is None:
         return
     cursor = connection.cursor()
     try:
-        query = "INSERT INTO user_uploads (user_id, image_path, result_id) VALUES (%s, %s, %s)"
-        cursor.execute(query, (user_id, image_path, result_id))
+        # Insert the upload record into the user_uploads table without image path
+        query = """
+            INSERT INTO user_uploads (user_id, plant_id, disease_id, upload_date)
+            VALUES (%s, %s, %s, NOW())  # Automatically set current date for upload_date
+        """
+        cursor.execute(query, (user_id, plant_id, disease_id))
         connection.commit()
         print("User upload added successfully.")
+
+        # After inserting the user upload, add a detection result with the real confidence score
+        add_detection_result(user_id, plant_id, disease_id, confidence_score)
+
     except Error as err:
         print(f"Error: {err}")
     finally:
         cursor.close()
         close_connection(connection)
-        
+
 # Function to add a detection result
 def add_detection_result(user_id, plant_id, disease_id, confidence_score):
     connection = connect_db()
@@ -71,9 +72,10 @@ def add_detection_result(user_id, plant_id, disease_id, confidence_score):
         return
     cursor = connection.cursor()
     try:
+        # Insert the detection result into the detection_results table
         query = """
-            INSERT INTO detection_results (user_id, plant_id, disease_id, confidence_score)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO detection_results (user_id, plant_id, disease_id, confidence_score, detection_date, upload_date)
+            VALUES (%s, %s, %s, %s, NOW(), NOW())
         """
         cursor.execute(query, (user_id, plant_id, disease_id, confidence_score))
         connection.commit()
@@ -84,57 +86,38 @@ def add_detection_result(user_id, plant_id, disease_id, confidence_score):
         cursor.close()
         close_connection(connection)
 
-# Function to fetch user uploads
-def fetch_user_uploads(user_id):
-    connection = connect_db()
-    if connection is None:
-        return
-    cursor = connection.cursor()
-    try:
-        query = "SELECT * FROM user_uploads WHERE user_id = %s"
-        cursor.execute(query, (user_id,))
-        results = cursor.fetchall()
-        for row in results:
-            print(row)
-    except Error as err:
-        print(f"Error: {err}")
-    finally:
-        cursor.close()
-        close_connection(connection)
-
-# Function to fetch detection results
+# Function to fetch detection results for a specific user
 def fetch_detection_results(user_id):
     connection = connect_db()
     if connection is None:
         return
     cursor = connection.cursor()
     try:
-        query = "SELECT * FROM detection_results WHERE user_id = %s"
+        # Fetch relevant columns for better understanding
+        query = """
+            SELECT result_id, user_id, plant_id, disease_id, confidence_score, detection_date, image_URL, upload_date 
+            FROM detection_results WHERE user_id = %s
+        """
         cursor.execute(query, (user_id,))
         results = cursor.fetchall()
-        for row in results:
-            print(row)
+        
+        # Display each row in a user-friendly format
+        if results:
+            for row in results:
+                print(f"Result ID: {row[0]}")
+                print(f"User ID: {row[1]}")
+                print(f"Plant ID: {row[2]}")
+                print(f"Disease ID: {row[3]}")
+                print(f"Confidence Score: {row[4]}")
+                print(f"Detection Date: {row[5]}")
+                print(f"Image URL: {row[6]}")
+                print(f"Upload Date: {row[7]}")
+                print("-" * 50)  # Separator for better readability
+        else:
+            print("No detection results found for this user.")
     except Error as err:
         print(f"Error: {err}")
     finally:
         cursor.close()
         close_connection(connection)
 
-# Example Usage
-if __name__ == "__main__":
-    # Add a new user
-    add_user('john_doe', 'john@example.com', '1234')
-
-    # Add a user upload
-    add_user_upload(1, '/path/to/image.jpg', 1)
-
-    # Add a detection result
-    add_detection_result(1, 2, 3, 85.6)
-
-    # Fetch user uploads
-    print("User uploads:")
-    fetch_user_uploads(1)
-
-    # Fetch detection results
-    print("Detection results:")
-    fetch_detection_results(1)
