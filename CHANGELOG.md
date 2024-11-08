@@ -7,3 +7,7 @@ Implemented changes:
 - removed redundant picocss templates
 - fixed project link in the footer of our app's webpage
 - updated requirements.txt to the latest version to manage dependencies
+- fixed the errors of compilation in app.py
+- updated the python script with database
+- updated the database
+  
