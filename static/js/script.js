@@ -9,6 +9,23 @@ document.addEventListener("DOMContentLoaded", function() {
     const htmlTag = document.documentElement;
     const hiddenContent = document.getElementsByClassName('hidden-until-submit')
 
+
+    // scrolling animation
+    const elements = document.querySelectorAll(".container .element-container, .main-container section");
+    // Create IntersectionObserver to detect when elements are in the viewport
+    const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            // Add 'visible' class to trigger the animation
+            entry.target.classList.add("visible");
+            observer.unobserve(entry.target);  // Stop observing once the animation has been triggered
+        }
+        });
+    }, { threshold: 0.1 }); // Trigger when 10% of the element is visible
+    // Observe each element
+    elements.forEach(element => observer.observe(element));
+
+
     // Dark Mode Toggle
     darkModeToggle.addEventListener('click', function() {
         if (htmlTag.getAttribute('data-theme') === 'dark') {
@@ -61,13 +78,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 for (let i = 0; i < hiddenContent.length; i++) {
                     hiddenContent[i].style.display = 'block';
                 }
-
-                // outputText.textContent = "Image uploaded successfully!";
             };
             reader.readAsDataURL(file);
         } 
-        // else {
-        //     outputText.textContent = "No image selected.";
-        // }
     });
 });
