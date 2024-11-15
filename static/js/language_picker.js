@@ -53,6 +53,26 @@ var MLstrings = [
         Russian: "Выберите тип растения:",
     },
     {
+        English: "Select a plant type",
+        Romanian: "Selectați tipul de plantă",
+        Russian: "Выберите тип растения",
+    },
+    {
+        English: "Choose an image:",
+        Romanian: "Selectați imagine:",
+        Russian: "Выберите изображение:",
+    },
+    {
+        English: "Choose File",
+        Romanian: "Selectați file:",
+        Russian: "Выберите файл:",
+    },
+    {
+        English: "No file chosen",
+        Romanian: "No file:",
+        Russian: "Файл не выбран:",
+    },
+    {
         English: "Submitted Image",
         Romanian: "Imagine încărcată",
         Russian: "Загруженное изображение",

@@ -70,7 +70,7 @@ main {
 
 .form-submit-button {
     text-align: center;
-    width: 50%;
+    width: 65%;
     margin-inline: auto;
 }
 
@@ -85,6 +85,7 @@ main {
     text-align: justify;
     margin-top: 30px;
     margin-bottom: 30px;
+    padding: 15px;
 }
 
 .app-logo {
@@ -154,7 +155,28 @@ img {
     margin-top: 20px;
 }
 
+#result {
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 #language-picker label {
     display: inline-block;
     margin-right: 10px;
 }
+
+/* Scrolling animation */
+/* Initially hide elements */
+.container .element-container, .main-container section {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 1s ease, transform 1s ease;
+  }
+  
+  /* Class to trigger animation */
+  .main-container .element-container.visible, .main-container section.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  

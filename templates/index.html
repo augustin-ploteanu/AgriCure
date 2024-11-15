@@ -68,7 +68,7 @@
         </section>
       </div>
   
-      <section>
+      <div class="element-container">
         <div class="form-submit-button">
           <h2 data-mlr-text>Upload an image!</h2>
           <form id="image-form" action="{{ url_for('upload_image') }}" method="POST" enctype="multipart/form-data">
@@ -76,7 +76,7 @@
         
             <label for="plant-type" data-mlr-text>Select Plant Type:</label>
             <select id="plant-type" name="plant-type">
-                <option value="" disabled selected>Select a plant type</option>
+                <option value="" disabled selected data-mlr-text>Select a plant type</option>
                 <option data-mlr-text value="Grapes">Grapes</option>
                 <option data-mlr-text value="Apple">Apple</option>
                 <option data-mlr-text value="Cucumber">Cucumber</option>
@@ -84,11 +84,11 @@
             </select>
             
             <label for="image-upload" data-mlr-text>Choose an image:</label>
-            <input type="file" id="image-upload" name="image-upload" accept="image/*">
+            <input type="file" id="image-upload" name="image-upload" accept="image/*" data-mlr-text>
             <button data-mlr-text type="submit">Upload</button>
           </form>        
         </div>
-      </section>
+      </div>
 
       <div class="hidden-until-submit">
         <section>
