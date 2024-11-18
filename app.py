@@ -1,9 +1,8 @@
 import importlib
 import logging  
-from flask import Flask, flash, request, jsonify, render_template, redirect, url_for, session, flash
+from flask import Flask, flash, request, jsonify, render_template
 import os
 from werkzeug.utils import secure_filename
-from werkzeug.security import generate_password_hash, check_password_hash
 import torch
 from PIL import Image
 import pathlib
@@ -219,77 +218,6 @@ def upload_image():
 
     logging.info(f'Upload result: {result}')  
     return jsonify(result)
-    
-#
-###authentication
-#
-
-# Login Route
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-
-        # Connect to the database
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-
-        # Fetch user by username
-        query = "SELECT username, password FROM users WHERE username = %s"
-        cursor.execute(query, (username,))
-        user = cursor.fetchone()
-
-        cursor.close()
-        conn.close()
-
-        # Check if user exists and the password matches
-        if user and check_password_hash(user['password'], password):
-            session['username'] = user['username']
-            flash('Login successful!', 'success')
-            return redirect(url_for('index'))
-        else:
-            flash('Invalid username or password', 'danger')
-
-    return render_template('autentificare.html', action='login')
-
-# Signup Route
-@app.route('/signup', methods=['GET', 'POST'])
-def signup():
-    if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        password = request.form['password']
-
-        # Hash the password
-        password_hash = generate_password_hash(password)
-
-        # Connect to the database
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        try:
-            # Insert the new user into the database
-            query = "INSERT INTO users (username, email, password) VALUES (%s, %s, %s)"
-            cursor.execute(query, (username, email, password_hash))
-            conn.commit()
-
-            flash('Signup successful! Please log in.', 'success')
-            return redirect(url_for('login'))
-        except mysql.connector.Error as e:
-            flash(f'Error: {e}', 'danger')
-        finally:
-            cursor.close()
-            conn.close()
-
-    return render_template('autentificare.html', action='signup')
-
-# Logout Route
-@app.route('/logout')
-def logout():
-    session.pop('username', None)
-    flash('You have been logged out.', 'info')
-    return redirect(url_for('index'))  # Redirect to the main page 
 
 if __name__ == "__main__":
     app.run()
