@@ -1,36 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="../static/css/styles.css"> 
-    <link rel="stylesheet" href="../static/css/login.css"> 
-    <title>Sign Up</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../static/css/styles.css">
+    <link rel="stylesheet" href="../static/css/login.css">
+    <title>{% if action == 'login' %}Login{% else %}Sign Up{% endif %}</title>
 </head>
 <body>
     <div class="container">
-        <form class="form" action="/signup" method="POST"> <!-- Add the action and method attributes -->
-            {{ csrf_token() }} <!-- Include the CSRF token here -->
-            <h4>SIGN UP</h4>
-            <div class="form-row">
-                <label for="name" class="form-label">Username</label>
-                <input type="text" placeholder="Please, enter your username" id="name" name="username" class="form-input" required>
-            </div>
+        <!-- Centralized Form Box -->
+        <div class="form">
+            <!-- Flash Messages Inside the Box -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div id="flash-messages" class="flash-messages">
+                        {% for category, message in messages %}
+                            <p class="{{ category }}">{{ message }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
 
-            <div class="form-row">
-                <label for="email" class="form-label">Email</label>
-                <input type="email" id="email" name="email" class="form-input" required>
-            </div>
+            <!-- Login Form -->
+            {% if action == 'login' %}
+            <form action="{{ url_for('login') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <h4>Login</h4>
+                <div class="form-row">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" name="username" id="username" placeholder="Enter your username" class="form-input" required>
+                </div>
+                <div class="form-row">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" name="password" id="password" placeholder="Enter your password" class="form-input" required>
+                </div>
+                <button type="submit" class="btn form-btn">Login</button>
+                <p>Don't have an account? <a href="{{ url_for('signup') }}">Sign up here</a></p>
+            </form>
+            {% endif %}
 
-            <div class="form-row">
-                <label for="password" class="form-label">Password</label>
-                <input type="password" id="password" name="password" class="form-input" required>
-                <small class="form-alert">Please provide a password</small>
-            </div>
-
-            <button type="submit" class="btn form-btn">Submit</button>
-        </form>
+            <!-- Signup Form -->
+            {% if action == 'signup' %}
+            <form action="{{ url_for('signup') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <h4>Sign Up</h4>
+                <div class="form-row">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" name="username" id="username" placeholder="Enter your username" class="form-input" required>
+                </div>
+                <div class="form-row">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" name="email" id="email" placeholder="Enter your email" class="form-input" required>
+                </div>
+                <div class="form-row">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" name="password" id="password" placeholder="Enter your password" class="form-input" required>
+                </div>
+                <button type="submit" class="btn form-btn">Sign Up</button>
+                <p>Already have an account? <a href="{{ url_for('login') }}">Log in here</a></p>
+            </form>
+            {% endif %}
+        </div>
     </div>
+    <script>
+        // Automatically hide flash messages after 5 seconds
+        setTimeout(() => {
+            const flashMessages = document.getElementById('flash-messages');
+            if (flashMessages) {
+                flashMessages.style.display = 'none';
+            }
+        }, 10000);
+    </script>
 </body>
 </html>
