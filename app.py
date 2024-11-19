@@ -9,7 +9,9 @@ from PIL import Image
 import pathlib
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from flask_wtf import CSRFProtect 
+from flask_wtf import CSRFProtect, FlaskForm
+from wtforms import StringField, PasswordField, SubmitField
+from wtforms.validators import InputRequired, Length, EqualTo, ValidationError
 import mysql.connector
 from mysql.connector import Error
 
@@ -26,7 +28,7 @@ app.config['MYSQL_HOST'] = '127.0.0.1'  # Only the host
 app.config['MYSQL_PORT'] = 3306  # Port can be specified separately
 app.config['MYSQL_DATABASE'] = 'plant_disease_db'  # Database name
 app.config['MYSQL_USER'] = 'root'  # MySQL user
-app.config['MYSQL_PASSWORD'] = '5132'  # MySQL password
+app.config['MYSQL_PASSWORD'] = '0404'  # MySQL password
 
 # Find relative directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -224,26 +226,50 @@ def upload_image():
 ###authentication
 #
 
-# Login Route
+# Registration form
+class RegisterForm(FlaskForm):
+    username = StringField(validators=[
+        InputRequired(message="Username is required"),
+        Length(min=4, max=20, message="Username must be between 4 and 20 characters")
+    ], render_kw={"placeholder": "Username"})
+
+    password = PasswordField(validators=[
+        InputRequired(message="Password is required"),
+        Length(min=4, max=20, message="Password must be between 8 and 20 characters")
+    ], render_kw={"placeholder": "Password"})
+
+    confirm_password = PasswordField(validators=[
+        InputRequired(message="Please confirm your password"),
+        EqualTo('password', message="Passwords must match")
+    ], render_kw={"placeholder": "Confirm Password"})
+
+    submit = SubmitField('Register')
+
+    def validate_username(self, username):
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT username FROM users WHERE username = %s", (username.data,))
+        existing_user_username = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        if existing_user_username:
+            raise ValidationError("That username already exists. Please choose a different one.")
+
+# Routes
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
 
-        # Connect to the database
+        # Authenticate the user
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-
-        # Fetch user by username
-        query = "SELECT username, password FROM users WHERE username = %s"
-        cursor.execute(query, (username,))
+        cursor.execute("SELECT username, password FROM users WHERE username = %s", (username,))
         user = cursor.fetchone()
-
         cursor.close()
         conn.close()
 
-        # Check if user exists and the password matches
         if user and check_password_hash(user['password'], password):
             session['username'] = user['username']
             flash('Login successful!', 'success')
@@ -253,43 +279,45 @@ def login():
 
     return render_template('autentificare.html', action='login')
 
-# Signup Route
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        password = request.form['password']
+    form = RegisterForm()
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+        email = request.form.get('email')
 
         # Hash the password
         password_hash = generate_password_hash(password)
 
-        # Connect to the database
+        # Insert user into the database
         conn = get_db_connection()
         cursor = conn.cursor()
 
         try:
-            # Insert the new user into the database
             query = "INSERT INTO users (username, email, password) VALUES (%s, %s, %s)"
             cursor.execute(query, (username, email, password_hash))
             conn.commit()
-
             flash('Signup successful! Please log in.', 'success')
             return redirect(url_for('login'))
-        except mysql.connector.Error as e:
-            flash(f'Error: {e}', 'danger')
+        except mysql.connector.IntegrityError as e:
+            if "Duplicate entry" in str(e):
+                flash('That username already exists. Please choose a different one.', 'danger')
+            else:
+                flash('An error occurred while processing your request. Please try again.', 'danger')
+        except Exception as e:
+            flash(f'Unexpected error: {e}', 'danger')
         finally:
             cursor.close()
             conn.close()
 
-    return render_template('autentificare.html', action='signup')
+    return render_template('autentificare.html', form=form, action='signup')
 
-# Logout Route
 @app.route('/logout')
 def logout():
     session.pop('username', None)
     flash('You have been logged out.', 'info')
-    return redirect(url_for('index'))  # Redirect to the main page 
+    return redirect(url_for('index'))
 
 if __name__ == "__main__":
     app.run()
