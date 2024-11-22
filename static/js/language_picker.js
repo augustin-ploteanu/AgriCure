@@ -7,6 +7,8 @@ var MLstrings = [
     { English: "What is AgriCure?", Romanian: "Ce este AgriCure?", Russian: "Что такое AgriCure?" },
     { English: "Frequently asked questions", Romanian: "Întrebări frecvente", Russian: "Часто задаваемые вопросы" },
     { English: "Upload", Romanian: "Încarcă", Russian: "Загрузить" },
+
+    // desc and faq
     { 
         English: "AgriCure is a simple and powerful tool that helps you identify plant diseases by analyzing a photo of your plants. Just snap a picture of the affected plant, and the app will diagnose the issue, suggest treatments, and offer care tips to keep your garden healthy. Whether you're a home gardener or a professional, it provides quick and reliable solutions to protect your plants and improve their overall health.", 
         Romanian: "AgriCure este un instrument simplu și puternic care te ajută să identifici bolile plantelor prin analizarea unei fotografii a plantelor tale. Fă o poză plantei afectate, iar aplicația va diagnostica problema, va sugera tratamente și îți va oferi sfaturi de îngrijire pentru a menține grădina sănătoasă. Fie că ești grădinar amator sau profesionist, aplicația oferă soluții rapide și de încredere pentru a proteja plantele și a le îmbunătăți starea generală.", 
@@ -42,6 +44,8 @@ var MLstrings = [
         Romanian: "Da! Aplicația oferă o varietate de recomandări de tratament, inclusiv soluții organice și prietenoase cu mediul, astfel încât să poți alege opțiunea care se potrivește cel mai bine preferințelor tale de grădinărit.",
         Russian: "Да! Приложение предлагает различные рекомендации по лечению, включая органические и экологически безопасные решения, чтобы вы могли выбрать подходящий вариант в зависимости от ваших предпочтений в садоводстве.",
     },
+
+    // control elements
     {
         English: "Upload an image!",
         Romanian: "Încarcă imagine!",
@@ -87,10 +91,49 @@ var MLstrings = [
         Romanian: "",
         Russian: "",
     },
+
+    // plant types
     { English: "Grapes", Romanian: "Struguri", Russian: "Виноград" },
     { English: "Apple", Romanian: "Măr", Russian: "Яблоко" },
     { English: "Cucumber", Romanian: "Castravete", Russian: "Огурец" },
-    { English: "Tomato", Romanian: "Roșii", Russian: "Помидор" }
+    { English: "Tomato", Romanian: "Roșii", Russian: "Помидор" },
+
+    // tiles
+    {
+        English: "You might have encountered:",
+        Romanian: "Este posibil să fi întâlnit:",
+        Russian: "Возможно, вы сталкивались с:"
+    },
+    {
+        English: "Powdery mildew",
+        Romanian: "Făinare",
+        Russian: "Мучнистая роса"
+    },
+    {
+        English: "Black Rot",
+        Romanian: "Putregai negru",
+        Russian: "Черная гниль"
+    },
+    {
+        English: "Downy Mildew",
+        Romanian: "Mană",
+        Russian: "Пероноспороз"
+    },
+    {
+        English: "Rust",
+        Romanian: "Rugină",
+        Russian: "Ржавчина"
+    },
+    {
+        English: "White Mold",
+        Romanian: "Mucegai alb",
+        Russian: "Белая плесень"
+    },
+    {
+        English: "Blight",
+        Romanian: "Arsură",
+        Russian: "Гниль"
+    }
 ];
 
 // Default language in use
