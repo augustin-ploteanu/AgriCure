@@ -16,3 +16,5 @@ Implemented changes:
 - added smooth transition animation to sections on the title page
 - added tiles with common plant diseases
 - implemented an authentication system
+- made the database to work on each computer while running the website app
+- added a test script which verifies the functionality of the database
