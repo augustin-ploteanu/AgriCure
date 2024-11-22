@@ -15,3 +15,4 @@ Implemented changes:
 - added translations for previously untracked elements on the title page
 - added smooth transition animation to sections on the title page
 - added tiles with common plant diseases
+- implemented an authentication system
