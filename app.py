@@ -8,7 +8,9 @@ from PIL import Image
 import pathlib
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from flask_wtf import CSRFProtect 
+from flask_wtf import CSRFProtect, FlaskForm
+from wtforms import StringField, PasswordField, SubmitField
+from wtforms.validators import InputRequired, Length, EqualTo, ValidationError
 import mysql.connector
 from mysql.connector import Error
 
@@ -171,19 +173,21 @@ def index():
 @limiter.limit("16 per minute")
 def upload_image():
     if 'image-upload' not in request.files or 'plant-type' not in request.form:
-        logging.warning('No file or plant type provided.')  
+        logging.warning('No file or plant type provided.')
         return jsonify({'error': 'No file or plant type provided'}), 400
 
     file = request.files['image-upload']
-    plant_type = request.form['plant-type']  
+    plant_type = request.form['plant-type']
+
+    if not plant_type:
+        logging.warning('Plant type not selected.')
+        return jsonify({'error': 'Plant type not selected'}), 400
 
     if file.filename == '':
-        logging.warning('No selected file.')  
+        logging.warning('No selected file.')
         return jsonify({'error': 'No selected file'}), 400
 
     filename = secure_filename(file.filename)
-
-    # This creates the uploads folder
     uploads_dir = os.path.join(BASE_DIR, 'uploads')
 
     if not os.path.exists(uploads_dir):
@@ -193,6 +197,7 @@ def upload_image():
     file.save(file_path)
 
     try:
+        # Call prediction function
         best_prediction = main_predict(file_path, plant_type)
 
         # Store the prediction result in the database
@@ -205,7 +210,7 @@ def upload_image():
         )
 
     except Exception as e:
-        logging.error(f'Error during prediction: {e}', exc_info=True)  
+        logging.error(f'Error during prediction: {e}', exc_info=True)
         return jsonify({'error': str(e)}), 400
 
     result = {
@@ -216,8 +221,105 @@ def upload_image():
         'Confidence': best_prediction['confidence'] if best_prediction else 'N/A'
     }
 
-    logging.info(f'Upload result: {result}')  
+    logging.info(f'Upload result: {result}')
     return jsonify(result)
+ 
+#
+###authentication
+#
+
+# Registration form
+class RegisterForm(FlaskForm):
+    username = StringField(validators=[
+        InputRequired(message="Username is required"),
+        Length(min=4, max=20, message="Username must be between 4 and 20 characters")
+    ], render_kw={"placeholder": "Username"})
+
+    password = PasswordField(validators=[
+        InputRequired(message="Password is required"),
+        Length(min=4, max=20, message="Password must be between 8 and 20 characters")
+    ], render_kw={"placeholder": "Password"})
+
+    confirm_password = PasswordField(validators=[
+        InputRequired(message="Please confirm your password"),
+        EqualTo('password', message="Passwords must match")
+    ], render_kw={"placeholder": "Confirm Password"})
+
+    submit = SubmitField('Register')
+
+    def validate_username(self, username):
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT username FROM users WHERE username = %s", (username.data,))
+        existing_user_username = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        if existing_user_username:
+            raise ValidationError("That username already exists. Please choose a different one.")
+
+# Routes
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        # Authenticate the user
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT username, password FROM users WHERE username = %s", (username,))
+        user = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if user and check_password_hash(user['password'], password):
+            session['username'] = user['username']
+            flash('Login successful!', 'success')
+            return redirect(url_for('index'))
+        else:
+            flash('Invalid username or password', 'danger')
+
+    return render_template('autentificare.html', action='login')
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    form = RegisterForm()
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+        email = request.form.get('email')
+
+        # Hash the password
+        password_hash = generate_password_hash(password)
+
+        # Insert user into the database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        try:
+            query = "INSERT INTO users (username, email, password) VALUES (%s, %s, %s)"
+            cursor.execute(query, (username, email, password_hash))
+            conn.commit()
+            flash('Signup successful! Please log in.', 'success')
+            return redirect(url_for('login'))
+        except mysql.connector.IntegrityError as e:
+            if "Duplicate entry" in str(e):
+                flash('That username already exists. Please choose a different one.', 'danger')
+            else:
+                flash('An error occurred while processing your request. Please try again.', 'danger')
+        except Exception as e:
+            flash(f'Unexpected error: {e}', 'danger')
+        finally:
+            cursor.close()
+            conn.close()
+
+    return render_template('autentificare.html', form=form, action='signup')
+
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('index'))
 
 if __name__ == "__main__":
     app.run()
