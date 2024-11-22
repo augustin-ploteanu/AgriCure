@@ -1,9 +1,8 @@
 import importlib
 import logging  
-from flask import Flask, flash, request, jsonify, render_template, redirect, url_for, session, flash
+from flask import Flask, flash, request, jsonify, render_template
 import os
 from werkzeug.utils import secure_filename
-from werkzeug.security import generate_password_hash, check_password_hash
 import torch
 from PIL import Image
 import pathlib
@@ -224,8 +223,7 @@ def upload_image():
 
     logging.info(f'Upload result: {result}')
     return jsonify(result)
-
-    
+ 
 #
 ###authentication
 #
