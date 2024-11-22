@@ -15,11 +15,11 @@
     </div>
     <div class="user-controls">
       {% if 'username' in session %}
-          <p>Welcome, {{ session['username'] }}!</p>
-          <a href="{{ url_for('logout') }}">Logout</a>
+        <p>Welcome, {{ session['username'] }}!</p>
+        <a href="{{ url_for('logout') }}">Logout</a>
       {% else %}
-          <a href="{{ url_for('login') }}">Login</a>
-          <a href="{{ url_for('signup') }}">Sign Up</a>
+        <a href="{{ url_for('login') }}">Login</a>
+        <a href="{{ url_for('signup') }}">Sign Up</a>
       {% endif %}
     </div>
     <div class="controls">
@@ -62,7 +62,44 @@
           <span data-mlr-text>AgriCure is a simple and powerful tool that helps you identify plant diseases by analyzing a photo of your plants. Just snap a picture of the affected plant, and the app will diagnose the issue, suggest treatments, and offer care tips to keep your garden healthy. Whether you're a home gardener or a professional, it provides quick and reliable solutions to protect your plants and improve their overall health.</span>
         </section>
       </div>
-      
+
+      <div class="element-container">
+        <h2 data-mlr-text>You might have encountered:</h2>
+        <section class="tiles-container">
+          <div class="tile">
+            <a href="https://www.britannica.com/science/powdery-mildew" target="_blank"><h4 data-mlr-text>Powdery mildew</h4></a>
+            <img src="../static/images/PowderyMildew.jpg" alt="Powdery mildew" class="tile-img">
+          </div>
+
+          <div class="tile">
+            <a href="https://extension.umn.edu/disease-management/organic-management-black-rot" target="_blank"><h4 data-mlr-text>Black Rot</h4></a>
+            <img src="../static/images/BlackRot.png" alt="Black Rot" class="tile-img">
+          </div>
+
+          <div class="tile">
+            <a href="https://www.rhs.org.uk/disease/downy-mildews" target="_blank"><h4 data-mlr-text>Downy Mildew</h4></a>
+            <img src="../static/images/DowneyMildew.png" alt="Downy Mildew" class="tile-img">
+          </div>
+        </section>
+
+        <section class="tiles-container">
+          <div class="tile">
+            <a href="https://en.wikipedia.org/wiki/Rust_(fungus)" target="_blank"><h4 data-mlr-text>Rust</h4></a>
+            <img src="../static/images/Rust.png" alt="Rust" class="tile-img">
+          </div>
+
+          <div class="tile">
+            <a href="https://www.masterclass.com/articles/white-mold-on-plants" target="_blank"><h4 data-mlr-text>White Mold</h4></a>
+            <img src="../static/images/WhiteMold.png" alt="White Mold" class="tile-img">
+          </div>
+
+          <div class="tile">
+            <a href="https://www.britannica.com/science/blight" target="_blank"><h4 data-mlr-text>Blight</h4></a>
+            <img src="../static/images/Blight.png" alt="Blight" class="tile-img">
+          </div>
+        </section>
+      </div>
+
       <div class="element-container">
         <section>
           <h2 data-mlr-text>Frequently asked questions</h2>

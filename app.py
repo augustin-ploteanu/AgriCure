@@ -28,7 +28,7 @@ app.config['MYSQL_HOST'] = '127.0.0.1'  # Only the host
 app.config['MYSQL_PORT'] = 3306  # Port can be specified separately
 app.config['MYSQL_DATABASE'] = 'plant_disease_db'  # Database name
 app.config['MYSQL_USER'] = 'root'  # MySQL user
-app.config['MYSQL_PASSWORD'] = '0404'  # MySQL password
+app.config['MYSQL_PASSWORD'] = '5132'  # MySQL password
 
 # Find relative directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -174,19 +174,21 @@ def index():
 @limiter.limit("16 per minute")
 def upload_image():
     if 'image-upload' not in request.files or 'plant-type' not in request.form:
-        logging.warning('No file or plant type provided.')  
+        logging.warning('No file or plant type provided.')
         return jsonify({'error': 'No file or plant type provided'}), 400
 
     file = request.files['image-upload']
-    plant_type = request.form['plant-type']  
+    plant_type = request.form['plant-type']
+
+    if not plant_type:
+        logging.warning('Plant type not selected.')
+        return jsonify({'error': 'Plant type not selected'}), 400
 
     if file.filename == '':
-        logging.warning('No selected file.')  
+        logging.warning('No selected file.')
         return jsonify({'error': 'No selected file'}), 400
 
     filename = secure_filename(file.filename)
-
-    # This creates the uploads folder
     uploads_dir = os.path.join(BASE_DIR, 'uploads')
 
     if not os.path.exists(uploads_dir):
@@ -196,6 +198,7 @@ def upload_image():
     file.save(file_path)
 
     try:
+        # Call prediction function
         best_prediction = main_predict(file_path, plant_type)
 
         # Store the prediction result in the database
@@ -208,7 +211,7 @@ def upload_image():
         )
 
     except Exception as e:
-        logging.error(f'Error during prediction: {e}', exc_info=True)  
+        logging.error(f'Error during prediction: {e}', exc_info=True)
         return jsonify({'error': str(e)}), 400
 
     result = {
@@ -219,8 +222,9 @@ def upload_image():
         'Confidence': best_prediction['confidence'] if best_prediction else 'N/A'
     }
 
-    logging.info(f'Upload result: {result}')  
+    logging.info(f'Upload result: {result}')
     return jsonify(result)
+
     
 #
 ###authentication
