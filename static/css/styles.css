@@ -216,3 +216,8 @@ transform: translateY(0);
     max-width: 290px;
     border-radius: 10px;
 }
+
+/* Tiles dark mode */
+[data-theme="dark"] .tile {
+    background-color: rgba(4, 43, 22, 0.73);
+}
