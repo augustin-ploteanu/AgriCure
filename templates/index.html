@@ -44,6 +44,8 @@
   </header>
 
   <div class="main-container">
+
+    <!--  Abstract  -->
     <main class="container">
       <div class="element-container">
         <section class="abstract">
@@ -52,6 +54,7 @@
         </section>
       </div>
 
+      <!--   Tiles   -->
       <div class="element-container">
         <h2 data-mlr-text>You might have encountered:</h2>
         <section class="tiles-container">
@@ -89,6 +92,37 @@
         </section>
       </div>
 
+      <!--   Statistics   -->
+      <div class="element-container">
+        <h2>Statistics</h2>
+        <p>
+          Below you will find useful up-to-date statistics on worldwide spread of plant diseases.
+        </p>
+      </div>
+
+      <!--   World Map   -->
+      <div class="element-container">
+        <section>
+          <h2>Plant disease frequency per country</h2>
+          <div class="map-wrapper">
+            <div id="map-tooltip">
+              <p>Drag to rotate</p>
+            </div>
+            <div id="chartdiv"></div>
+            <div class="map-legend">
+              <h4>Legend</h4>
+              <p>Showing proportion of diseased crops to surface area</p>
+              <div class="map-legend-stats">
+                <p>0%</p>
+                <div class="gradient-bar"></div>
+                <p>100%</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!--   FAQ   -->
       <div class="element-container">
         <section>
           <h2 data-mlr-text>Frequently asked questions</h2>
@@ -112,7 +146,8 @@
           <hr />
         </section>
       </div>
-  
+
+      <!--   Image Upload   -->
       <div class="element-container">
         <div class="form-submit-button">
           <h2 data-mlr-text>Upload an image!</h2>
@@ -135,6 +170,7 @@
         </div>
       </div>
 
+      <!--   Output Display   -->
       <div class="hidden-until-submit">
         <section>
           <h2 data-mlr-text>Submitted Image</h2>
@@ -147,6 +183,7 @@
         </section>
       </div>
 
+      <!--   Footer Navbar   -->
       <div class="navbar">
         <nav>
           <ul>
@@ -160,6 +197,8 @@
 
   <script src="../static/js/script.js"></script>
   <script src="../static/js/language_picker.js"></script>
+  <script src="https://cdn.amcharts.com/lib/editor/map/5/viewer.js"></script>
+  <script src="../static/js/world_map.js"></script>
   <script src="../static/js/authentification.js"></script>
 </body>
 </html>
