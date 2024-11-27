@@ -13,9 +13,15 @@
     <div class="app-logo">
       <h1>AgriCure</h1>
     </div>
-    <a href='autentificare.html'>login</a>
-
-    <!--  Control Elements  -->
+    <div class="user-controls">
+      {% if 'username' in session %}
+        <p>Welcome, {{ session['username'] }}!</p>
+        <a href="{{ url_for('logout') }}">Logout</a>
+      {% else %}
+        <a href="{{ url_for('login') }}">Login</a>
+        <a href="{{ url_for('signup') }}">Sign Up</a>
+      {% endif %}
+    </div>
     <div class="controls">
       <div class="lang-select">
         <fieldset>
