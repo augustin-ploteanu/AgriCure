@@ -221,3 +221,46 @@ transform: translateY(0);
 [data-theme="dark"] .tile {
     background-color: rgba(4, 43, 22, 0.73);
 }
+
+/* World Map */
+#chartdiv {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-size: 12px;
+    width: 95%;
+    height: 70vh;
+    margin-inline: auto;
+}
+
+.map-wrapper {
+    background-color: #f1f1f1;
+    border-radius: 20px;
+}
+
+#map-tooltip {
+    padding-top: 10px;
+    margin-left: 20px;
+}
+
+#map-tooltip p{
+    color: #0fa13a;
+
+}
+
+.map-legend {
+    margin-top: 20px;
+    padding: 25px;
+}
+
+.map-legend-stats {
+    display: flex;
+}
+
+.gradient-bar {
+    margin-left: 15px;
+    margin-right: 15px;
+    width: 40%;
+    height: 30px;
+    background: linear-gradient(to right, white, #0a7b25);
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
