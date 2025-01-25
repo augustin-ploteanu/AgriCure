@@ -15,6 +15,8 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from werkzeug.security import generate_password_hash, check_password_hash
 import mysql.connector
 from mysql.connector import Error
+from io import BytesIO
+import base64
 
 app = Flask(__name__)
 
@@ -29,7 +31,7 @@ app.config['MYSQL_HOST'] = '127.0.0.1'  # Only the host
 app.config['MYSQL_PORT'] = 3306  # Port can be specified separately
 app.config['MYSQL_DATABASE'] = 'plant_disease_db'  # Database name
 app.config['MYSQL_USER'] = 'root'  # MySQL user
-app.config['MYSQL_PASSWORD'] = '5132'  # MySQL password
+app.config['MYSQL_PASSWORD'] = '0404'  # MySQL password
 
 # Find relative directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -54,10 +56,11 @@ limiter = Limiter(
 pathlib.PosixPath = pathlib.WindowsPath
 
 # Load YOLO models
-model1 = torch.hub.load('ultralytics/yolov5', 'custom', path='models/grape.pt', force_reload=True)
-model2 = torch.hub.load('ultralytics/yolov5', 'custom', path='models/apple.pt', force_reload=True)
-model3 = torch.hub.load('ultralytics/yolov5', 'custom', path='models/cucumber1.pt', force_reload=True)
-model4 = torch.hub.load('ultralytics/yolov5', 'custom', path='models/best.pt', force_reload=True)
+# force_reload=True
+model1 = torch.hub.load('ultralytics/yolov5', 'custom', path='models/grape.pt')
+model2 = torch.hub.load('ultralytics/yolov5', 'custom', path='models/apple.pt')
+model3 = torch.hub.load('ultralytics/yolov5', 'custom', path='models/cucumber1.pt')
+model4 = torch.hub.load('ultralytics/yolov5', 'custom', path='models/best.pt')
 
 # Function to get info for prediction by disease ID
 def get_info_for_prediction(disease_id, model_nr):
@@ -147,25 +150,66 @@ def get_db_connection():
     return conn
 
 # Store prediction result in the database
-def store_prediction_result(plant_type, disease, causes, treatment, confidence):
+def store_prediction_result(plant_name, disease_name, causes, treatment, confidence, image_path):
+    if 'username' not in session:
+        logging.warning('User not logged in. Skipping image storage.')
+        return  
+
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        # Read and resize the image before storing
+        with Image.open(image_path) as img:
+            img = img.resize((480, 480))  # Resize image to 480x480
+            img_byte_arr = BytesIO()
+            img.save(img_byte_arr, format='PNG')  # Convert to binary format
+            image_binary = img_byte_arr.getvalue()
+
+        # Get user ID from session
+        cursor.execute("SELECT user_id FROM users WHERE username = %s", (session['username'],))
+        user_id = cursor.fetchone()
+        if user_id is None:
+            logging.warning('User ID not found in the database.')
+            return
+        user_id = user_id[0]
+        plant_id = get_plant_id(plant_name)
+
         # Insert prediction result into the database
         query = '''
-            INSERT INTO predictions (plant_type, disease, causes, treatment, confidence)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO detection_results (user_id, plant_id, disease, causes, treatment, confidence_score, image_file)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         '''
-        cursor.execute(query, (plant_type, disease, causes, treatment, confidence))
+        cursor.execute(query, (user_id, plant_id, disease_name, causes, treatment, confidence, image_binary))
         conn.commit()
 
+        logging.info(f'Prediction result stored in database for user {session["username"]}')
+    except Error as e:
+        logging.error(f'Error storing prediction in database: {e}', exc_info=True)
+    finally:
         cursor.close()
         conn.close()
 
-        logging.info(f'Prediction result stored in database: {plant_type}, {disease}, {confidence}%')
-    except Error as e:
-        logging.error(f'Error storing prediction in database: {e}', exc_info=True)
+def get_plant_id(plant_name):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT plant_id FROM plants WHERE plant_type = %s", (plant_name,))
+    
+    plant_id = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    
+    return plant_id[0] if plant_id else None
+
+def get_disease_id(disease_name):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT disease_id FROM diseases WHERE name = %s", (disease_name,))
+    disease_id = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return disease_id[0] if disease_id else None
 
 @app.route('/')
 def index():
@@ -179,9 +223,9 @@ def upload_image():
         return jsonify({'error': 'No file or plant type provided'}), 400
 
     file = request.files['image-upload']
-    plant_type = request.form['plant-type']
+    plant = request.form['plant-type']  # Now using the plant name
 
-    if not plant_type:
+    if not plant:
         logging.warning('Plant type not selected.')
         return jsonify({'error': 'Plant type not selected'}), 400
 
@@ -200,23 +244,28 @@ def upload_image():
 
     try:
         # Call prediction function
-        best_prediction = main_predict(file_path, plant_type)
+        best_prediction = main_predict(file_path, plant)
 
-        # Store the prediction result in the database
-        store_prediction_result(
-            plant_type,
-            best_prediction['disease'],
-            best_prediction['causes'],
-            best_prediction['treatment'],
-            best_prediction['confidence']
-        )
+        # If user is logged in, store the prediction result in the database
+        if 'username' in session:
+            store_prediction_result(
+                plant,  # Now passing plant name (VARCHAR)
+                best_prediction['disease'],  
+                best_prediction['causes'],
+                best_prediction['treatment'],
+                best_prediction['confidence'],
+                file_path  # Pass image path for processing
+            )
+            logging.info(f'Prediction stored in database for user {session["username"]}')
+        else:
+            logging.info('User not logged in; prediction result not stored in database.')
 
     except Exception as e:
         logging.error(f'Error during prediction: {e}', exc_info=True)
         return jsonify({'error': str(e)}), 400
 
     result = {
-        'Plant': plant_type,
+        'Plant': plant,
         'Disease': best_prediction['disease'] if best_prediction else 'No disease identified',
         'Causes': best_prediction['causes'] if best_prediction else 'N/A',
         'Treatment': best_prediction['treatment'] if best_prediction else 'N/A',
@@ -322,6 +371,67 @@ def logout():
     session.pop('username', None)
     flash('You have been logged out.', 'info')
     return redirect(url_for('index'))
+
+@app.route('/history', methods=['GET'])
+def view_history():
+    if 'username' not in session:
+        flash('You must be logged in to view your history.', 'warning')
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Get user ID
+    cursor.execute("SELECT user_id FROM users WHERE username = %s", (session['username'],))
+    user = cursor.fetchone()
+    
+    if not user:
+        flash('User not found.', 'danger')
+        return redirect(url_for('index'))
+
+    user_id = user['user_id']
+
+    # Pagination variables
+    page = int(request.args.get('page', 1))  # Default to page 1
+    results_per_page = 10
+    offset = (page - 1) * results_per_page  # Correctly calculate offset
+
+    # Fetch total results count for pagination
+    cursor.execute("SELECT COUNT(*) AS total FROM detection_results WHERE user_id = %s", (user_id,))
+    total_results = cursor.fetchone()['total']
+    total_pages = (total_results + results_per_page - 1) // results_per_page  # Calculate total pages
+
+    # Handle invalid page numbers
+    if page < 1 or page > total_pages:
+        flash('Invalid page number.', 'warning')
+        return redirect(url_for('view_history', page=1))
+
+    # Fetch paginated upload history
+    cursor.execute("""
+        SELECT p.plant_type, d.disease, d.causes, d.treatment, d.confidence_score, d.detection_date, d.image_file
+        FROM detection_results d
+        JOIN plants p ON d.plant_id = p.plant_id
+        WHERE d.user_id = %s
+        ORDER BY d.detection_date DESC
+        LIMIT %s OFFSET %s
+    """, (user_id, results_per_page, offset))
+    
+    history = cursor.fetchall()
+
+    # Convert binary images to Base64
+    for entry in history:
+        if entry['image_file']:  # Ensure image exists
+            entry['image_file'] = base64.b64encode(entry['image_file']).decode('utf-8')
+
+    cursor.close()
+    conn.close()
+
+    return render_template('history.html', history=history, page=page, total_pages=total_pages)
+
+@app.template_filter('b64encode')
+def b64encode_filter(data):
+    """Convert binary image data to Base64 for HTML display."""
+    return base64.b64encode(data).decode('utf-8') if data else None
 
 if __name__ == "__main__":
     app.run()

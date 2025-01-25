@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload History - AgriCure</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pico.jade.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+</head>
+<body>
+
+  <!-- Header Section -->
+  <header class="container-fluid">
+    <div class="app-logo">
+      <h1>AgriCure</h1>
+    </div>
+    <div class="user-controls">
+      {% if 'username' in session %}
+        <p>Welcome, {{ session['username'] }}!</p>
+        <a href="{{ url_for('index') }}" class="btn">Back to Home</a>
+        <a href="{{ url_for('logout') }}" class="btn">Logout</a>
+      {% else %}
+        <a href="{{ url_for('login') }}" class="btn">Login</a>
+        <a href="{{ url_for('signup') }}" class="btn">Sign Up</a>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="main-container">
+    <main class="container">
+      <h2>Your Upload History</h2>
+
+      {% if history %}
+      <div class="history-table-wrapper">
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>Plant</th>
+                    <th>Disease</th>
+                    <!--<th>Causes</th>-->
+                    <!--<th>Treatment</th>-->
+                    <th>Confidence</th>
+                    <th>Detection Date</th>
+                    <th>Image</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in history %}
+                <tr>
+                    <td>{{ entry.plant_type }}</td>
+                    <td>{{ entry.disease }}</td>
+                    <!--<td>{{ entry.causes }}</td>-->
+                    <!--<td>{{ entry.treatment }}</td>-->
+                    <td>{{ entry.confidence_score }}%</td>
+                    <td>{{ entry.detection_date }}</td>
+                    <td>
+                        {% if entry.image_file %}
+                            <img src="data:image/png;base64,{{ entry.image_file }}" alt="Uploaded Image">
+                        {% else %}
+                            No Image
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Controls -->
+      <div class="pagination">
+        {% if page > 1 %}
+          <a href="{{ url_for('view_history', page=page-1) }}" class="btn">Previous</a>
+        {% endif %}
+        <span>Page {{ page }} of {{ total_pages }}</span>
+        {% if page < total_pages %}
+          <a href="{{ url_for('view_history', page=page+1) }}" class="btn">Next</a>
+        {% endif %}
+      </div>
+
+      {% else %}
+          <p>No upload history found.</p>
+      {% endif %}
+    </main>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
